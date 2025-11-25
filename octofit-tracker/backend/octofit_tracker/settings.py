@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,14 @@ SECRET_KEY = 'django-insecure-r!9+dck-4ci4+py^z^xq5(vg=+8uh9#0q%z10becs!_ti&(l=z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+codespace = os.environ.get('CODESPACE_NAME')
+if codespace:
+    codespace_domain = f"{codespace}-8000.app.github.dev"
+    ALLOWED_HOSTS = [codespace_domain, 'localhost', '127.0.0.1']
+    # Trusted origins for CSRF when using Codespaces HTTPS
+    CSRF_TRUSTED_ORIGINS = [f"https://{codespace_domain}"]
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
