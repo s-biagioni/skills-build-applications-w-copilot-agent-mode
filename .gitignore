@@ -34,3 +34,6 @@ __pycache__/
 
 # Ignore created venv in backend
 /octofit-tracker/backend/venv/
+
+# Ignore backend sqlite database
+/octofit-tracker/backend/db.sqlite3
