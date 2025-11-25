@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import Modal from './Modal';
+import { getColumns, formatValue, ensureItems } from './utils';
 
 export default function Teams() {
   const [items, setItems] = useState([]);
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const codespace = process.env.REACT_APP_CODESPACE_NAME;
@@ -14,25 +19,53 @@ export default function Teams() {
       .then(res => res.json())
       .then(json => {
         console.log('Teams fetched data:', json);
-        let data;
-        if (Array.isArray(json)) data = json;
-        else if (json && json.results) data = json.results;
-        else data = [json];
-        setItems(data);
+        setItems(ensureItems(json));
       })
       .catch(err => console.error('Error fetching Teams:', err));
   }, []);
 
+  const columns = getColumns(items);
+  const filtered = items.filter(it => !query || JSON.stringify(it).toLowerCase().includes(query.toLowerCase()));
   return (
     <div className="container mt-4">
-      <h2>Teams</h2>
-      <ul className="list-group">
-        {items.map((it, idx) => (
-          <li className="list-group-item" key={it.id || idx}>
-            {JSON.stringify(it)}
-          </li>
-        ))}
-      </ul>
+      <div className="card">
+        <div className="card-header d-flex align-items-center justify-content-between">
+          <h2 className="h5 mb-0">Teams</h2>
+          <div className="d-flex gap-2">
+            <input className="form-control form-control-sm" placeholder="Search..." value={query} onChange={e => setQuery(e.target.value)} />
+            <button className="btn btn-sm btn-primary" onClick={() => window.location.reload()}>Refresh</button>
+          </div>
+        </div>
+        <div className="card-body p-0">
+          {filtered.length === 0 ? (
+            <div className="p-3">No teams found.</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover table-striped mb-0">
+                <thead>
+                  <tr>
+                    {columns.map(col => (<th key={col}>{col}</th>))}
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((it, idx) => (
+                    <tr key={it.id || idx}>
+                      {columns.map(col => (<td key={col}>{formatValue(it[col])}</td>))}
+                      <td>
+                        <button className="btn btn-sm btn-outline-primary" onClick={() => { setSelected(it); setShowModal(true); }}>Details</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+      <Modal title="Team Details" show={showModal} onClose={() => setShowModal(false)}>
+        <pre>{JSON.stringify(selected, null, 2)}</pre>
+      </Modal>
     </div>
   );
 }
